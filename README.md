@@ -1,3 +1,4 @@
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/A4Q380pb)
 # TCC 2026 — [Nome do Grupo]
 **LTP3 + QP3 · CEMIC 2026 · Prof. Rafael Martins Alves**
 
