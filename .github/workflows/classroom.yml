@@ -1,0 +1,78 @@
+name: Métricas de Participação
+'on':
+  - push
+  - pull_request
+  - workflow_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  metricas:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Métricas de commits por integrante
+        run: |
+          echo "=================================================="
+          echo "📊 PARTICIPAÇÃO — ÚLTIMOS 7 DIAS"
+          echo "=================================================="
+          git log --after="7 days ago" --pretty=format:"%an" | \
+            sort | uniq -c | sort -rn | \
+            awk '{printf "  %-30s %3d commits\n", $2, $1}'
+          echo ""
+          echo "=================================================="
+          echo "📈 TOTAL GERAL DE COMMITS POR INTEGRANTE"
+          echo "=================================================="
+          git log --pretty=format:"%an" | \
+            sort | uniq -c | sort -rn | \
+            awk '{printf "  %-30s %3d commits\n", $2, $1}'
+          echo ""
+          echo "=================================================="
+          echo "📝 ÚLTIMOS 5 COMMITS"
+          echo "=================================================="
+          git log --oneline -5 \
+            --pretty=format:"  %h | %an | %ad | %s" \
+            --date=format:"%d/%m %H:%M"
+          echo ""
+          echo "=================================================="
+          echo "Professor: veja acima quem está contribuindo."
+          echo "Alerta: integrante sem commit por 7+ dias"
+          echo "pode indicar participação desigual."
+          echo "=================================================="
+
+      - name: Verificar participação mínima
+        run: |
+          python3 - << 'EOF'
+          import subprocess, sys
+          from datetime import datetime, timedelta
+
+          desde = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+          r = subprocess.run(
+              ["git", "log", f"--after={desde}", "--pretty=format:%an"],
+              capture_output=True, text=True
+          )
+          autores = set(l.strip() for l in r.stdout.splitlines() if l.strip())
+          
+          r2 = subprocess.run(
+              ["git", "log", "--pretty=format:%an"],
+              capture_output=True, text=True
+          )
+          todos = set(l.strip() for l in r2.stdout.splitlines() if l.strip())
+          
+          sem_commit = todos - autores
+          if sem_commit:
+              print(f"\n⚠️  SEM COMMIT NOS ÚLTIMOS 7 DIAS: {', '.join(sem_commit)}")
+          else:
+              print("\n✅ Todos os integrantes fizeram commit esta semana.")
+          EOF
